@@ -1,28 +1,43 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
 import { toast } from "sonner";
+import { walletService } from "../services/api";
+import { ApiError } from "../services/api/apiClient";
 
 interface Web3ContextType {
   account: string | null;
   chainId: number | null;
   connecting: boolean;
+  authToken: string | null;
+  isAuthenticating: boolean;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
+  authenticateWallet: () => Promise<boolean>;
   isConnected: boolean;
+  isAuthenticated: boolean;
 }
 
 const Web3Context = createContext<Web3ContextType | undefined>(undefined);
+
+const AUTH_TOKEN_KEY = "auth_token";
 
 export function Web3Provider({ children }: { children: ReactNode }) {
   const [account, setAccount] = useState<string | null>(null);
   const [chainId, setChainId] = useState<number | null>(null);
   const [connecting, setConnecting] = useState(false);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   // Initialize from localStorage on mount
   useEffect(() => {
     const savedAccount = localStorage.getItem("walletAddress");
+    const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+    
     if (savedAccount) {
       setAccount(savedAccount);
+    }
+    
+    if (savedToken) {
+      setAuthToken(savedToken);
     }
   }, []);
 
@@ -60,11 +75,60 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Authenticate wallet with backend
+  const authenticateWallet = async (): Promise<boolean> => {
+    if (!account) {
+      toast.error("Please connect your wallet first");
+      return false;
+    }
+    
+    setIsAuthenticating(true);
+    
+    try {
+      // Create signature message
+      const message = `Sign this message to authenticate with Ring Weave Bridge: ${Date.now()}`;
+      
+      // Request signature from user
+      const signature = await window.ethereum.request({
+        method: "personal_sign",
+        params: [message, account]
+      });
+      
+      // Verify with backend
+      const response = await walletService.verifyWallet({
+        address: account,
+        signature,
+        message
+      });
+      
+      // Save token
+      setAuthToken(response.token);
+      localStorage.setItem(AUTH_TOKEN_KEY, response.token);
+      
+      toast.success("Wallet authenticated successfully!");
+      return true;
+    } catch (error) {
+      console.error("Error authenticating wallet:", error);
+      
+      if (error instanceof ApiError) {
+        toast.error(`Authentication failed: ${error.message}`);
+      } else {
+        toast.error("Failed to authenticate wallet. Please try again.");
+      }
+      
+      return false;
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
   // Disconnect wallet
   const disconnectWallet = () => {
     setAccount(null);
     setChainId(null);
+    setAuthToken(null);
     localStorage.removeItem("walletAddress");
+    localStorage.removeItem(AUTH_TOKEN_KEY);
     toast.success("Wallet disconnected");
   };
 
@@ -80,7 +144,10 @@ export function Web3Provider({ children }: { children: ReactNode }) {
         // User switched accounts
         setAccount(accounts[0]);
         localStorage.setItem("walletAddress", accounts[0]);
-        toast.info("Account changed");
+        // Clear auth token as it's tied to the account
+        setAuthToken(null);
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        toast.info("Account changed. Please re-authenticate.");
       }
     };
 
@@ -127,9 +194,13 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     account,
     chainId,
     connecting,
+    authToken,
+    isAuthenticating,
     connectWallet,
     disconnectWallet,
+    authenticateWallet,
     isConnected: !!account,
+    isAuthenticated: !!authToken,
   };
 
   return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>;

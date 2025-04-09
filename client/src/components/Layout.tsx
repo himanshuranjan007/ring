@@ -1,16 +1,22 @@
-
 import { ReactNode } from "react";
 import Navbar from "./Navbar";
 import { cn } from "@/lib/utils";
 import NetworkGraph from "./NetworkGraph";
+import ApiHealthCheck from "./ApiHealthCheck";
 
 type LayoutProps = {
   children: ReactNode;
   className?: string;
   withNetworkGraph?: boolean;
+  showApiHealthCheck?: boolean;
 };
 
-export default function Layout({ children, className, withNetworkGraph = false }: LayoutProps) {
+export default function Layout({ 
+  children, 
+  className, 
+  withNetworkGraph = false,
+  showApiHealthCheck = true
+}: LayoutProps) {
   return (
     <div className="min-h-screen bg-web3-dark relative overflow-hidden">
       {/* Background grid */}
@@ -26,6 +32,9 @@ export default function Layout({ children, className, withNetworkGraph = false }
       <main className={cn("pt-16 relative z-10", className)}>
         {children}
       </main>
+      
+      {/* API Health Check */}
+      {showApiHealthCheck && <ApiHealthCheck />}
       
       {/* Footer */}
       <footer className="border-t border-web3-border mt-20 py-6 relative z-10">

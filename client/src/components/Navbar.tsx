@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useWeb3 } from "@/contexts/Web3Context";
@@ -9,6 +8,7 @@ import { cn } from "@/lib/utils";
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { account, connectWallet, disconnectWallet, connecting } = useWeb3();
+  const location = useLocation();
 
   // Format address for display
   const formatAddress = (address: string) => {
@@ -17,6 +17,10 @@ export default function Navbar() {
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
 
   return (
@@ -37,13 +41,40 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-gray-200 hover:text-white transition-colors">
+            <Link 
+              to="/" 
+              className={cn(
+                "text-gray-200 hover:text-white transition-colors",
+                isActive("/") && "text-white font-medium"
+              )}
+            >
               Home
             </Link>
-            <Link to="/bridge" className="text-gray-200 hover:text-white transition-colors">
+            <Link 
+              to="/bridge" 
+              className={cn(
+                "text-gray-200 hover:text-white transition-colors",
+                isActive("/bridge") && "text-white font-medium"
+              )}
+            >
               Bridge
             </Link>
-            <Link to="/dashboard" className="text-gray-200 hover:text-white transition-colors">
+            <Link 
+              to="/transactions" 
+              className={cn(
+                "text-gray-200 hover:text-white transition-colors",
+                (isActive("/transactions") || location.pathname.startsWith("/transaction/")) && "text-white font-medium"
+              )}
+            >
+              Transactions
+            </Link>
+            <Link 
+              to="/dashboard" 
+              className={cn(
+                "text-gray-200 hover:text-white transition-colors",
+                isActive("/dashboard") && "text-white font-medium"
+              )}
+            >
               Dashboard
             </Link>
             <div className="ml-4">
@@ -99,21 +130,40 @@ export default function Navbar() {
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <Link
             to="/"
-            className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-web3-card"
+            className={cn(
+              "block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-web3-card",
+              isActive("/") && "bg-web3-card/50 text-white"
+            )}
             onClick={() => setMobileMenuOpen(false)}
           >
             Home
           </Link>
           <Link
             to="/bridge"
-            className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-web3-card"
+            className={cn(
+              "block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-web3-card",
+              isActive("/bridge") && "bg-web3-card/50 text-white"
+            )}
             onClick={() => setMobileMenuOpen(false)}
           >
             Bridge
           </Link>
           <Link
+            to="/transactions"
+            className={cn(
+              "block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-web3-card",
+              (isActive("/transactions") || location.pathname.startsWith("/transaction/")) && "bg-web3-card/50 text-white"
+            )}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Transactions
+          </Link>
+          <Link
             to="/dashboard"
-            className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-web3-card"
+            className={cn(
+              "block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-web3-card",
+              isActive("/dashboard") && "bg-web3-card/50 text-white"
+            )}
             onClick={() => setMobileMenuOpen(false)}
           >
             Dashboard

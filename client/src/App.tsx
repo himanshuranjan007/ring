@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +7,8 @@ import { Web3Provider } from "@/contexts/Web3Context";
 import Index from "./pages/Index";
 import Bridge from "./pages/Bridge";
 import Dashboard from "./pages/Dashboard";
+import Transactions from "./pages/Transactions";
+import TransactionDetail from "./pages/TransactionDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/bridge" element={<Bridge />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/transactions" element={<Transactions />} />
+            <Route path="/transaction/:txId" element={<TransactionDetail />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
